@@ -1,6 +1,11 @@
 import axios from "axios";
 
 export const apiInstance = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: "https://kupi.k.vu",
+  insecureHTTPParser: true,
+});
+
+export const storageInstance = axios.create({
+  baseURL: "https://s3api.k.vu",
   insecureHTTPParser: true,
 });

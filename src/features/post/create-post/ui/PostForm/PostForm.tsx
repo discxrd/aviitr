@@ -1,20 +1,18 @@
-import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
-import { Button, Card, CardBody, Input } from "@nextui-org/react";
+import { Button, Card, CardBody, Image, Input } from "@nextui-org/react";
 import { useCallback, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { PostFormSchema, postFormSchema } from "../../model/postFormSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "react-query";
 import { AxiosError } from "axios";
-import { useDispatch } from "react-redux";
 import { createPost } from "entities/post/api/api";
 
 export const PostForm = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const [errorMessage, setErrorMessage] = useState("");
+  const [files, setFiles] = useState([]);
 
   const mutate = useMutation(createPost, {
     onError: (error: AxiosError) =>
@@ -34,8 +32,19 @@ export const PostForm = () => {
 
   const onSubmit = useCallback(({ title, content, price }: PostFormSchema) => {
     setErrorMessage("");
-    mutate.mutate({ title, content, price });
+    mutate.mutate({ title, content, price, files });
   }, []);
+
+  const uplaodFile = (input: any) => {
+    if (input.target.files && input.target.files[0]) {
+      const reader = new FileReader();
+
+      reader.readAsDataURL(input.target.files[0]);
+      reader.onload = (e) => {
+        setFiles([...files, e.target?.result]);
+      };
+    }
+  };
 
   return (
     <Card className="dark:bg-neutral-950 p-4 bg-neutral-100 min-w-[600px] w-min flex">
@@ -50,9 +59,6 @@ export const PostForm = () => {
               errorMessage: "text-md",
             }}
             size="lg"
-            startContent={
-              <EnvelopeIcon className="w-6 h-6 text-default-400 pointer-events-none flex-shrink-0" />
-            }
             type=""
             label="Title"
             placeholder="Title"
@@ -68,9 +74,6 @@ export const PostForm = () => {
               errorMessage: "text-md",
             }}
             size="lg"
-            startContent={
-              <EnvelopeIcon className="w-6 h-6 text-default-400 pointer-events-none flex-shrink-0" />
-            }
             label="Content"
             placeholder="Content"
             labelPlacement="outside"
@@ -85,9 +88,6 @@ export const PostForm = () => {
               errorMessage: "text-md",
             }}
             size="lg"
-            startContent={
-              <EnvelopeIcon className="w-6 h-6 text-default-400 pointer-events-none flex-shrink-0" />
-            }
             type=""
             pattern="[0-9]*"
             type="number"
@@ -99,23 +99,30 @@ export const PostForm = () => {
             errorMessage={errors.price?.message}
             {...register("price", { required: "Price is required" })}
           />
+          <Input type="file" onChange={uplaodFile} />
+          <div className="flex gap-4">
+            {files.map((file) => (
+              <div key={file}>
+                <Image
+                  src={file}
+                  alt="Card background"
+                  className="object-cover rounded-xl"
+                  width={150}
+                />
+              </div>
+            ))}
+          </div>
           <Button
             size="lg"
             type="submit"
             isLoading={mutate.isLoading}
             className="w-full bg-white text-black font-bold text-xl"
-          ></Button>
+          >
+            Create post
+          </Button>
           {errorMessage && (
             <p className="text-red-500 font-bold">{errorMessage}</p>
           )}
-          <div className="w-full text-foreground-400 font-medium">
-            <Link to="/register" className="flex flex-row gap-2 text-large">
-              Does not have account?
-              <h1 className="font-bold text-white-400 opacity-70 underline underline-offset-2">
-                Sign up
-              </h1>
-            </Link>
-          </div>
         </form>
       </CardBody>
     </Card>
